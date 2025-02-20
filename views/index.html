@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Connectivity Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">Farm Connectivity Monitor</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Current Status</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-100 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium text-blue-800">Latest Latency</h3>
+                    <p id="latest-latency" class="text-2xl font-bold text-blue-900">--</p>
+                </div>
+                <div class="bg-green-100 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium text-green-800">Success Rate</h3>
+                    <p id="success-rate" class="text-2xl font-bold text-green-900">--</p>
+                </div>
+                <div class="bg-purple-100 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium text-purple-800">Last Check</h3>
+                    <p id="last-check" class="text-2xl font-bold text-purple-900">--</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Latency Graph</h2>
+            <canvas id="latencyChart"></canvas>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Recent History</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-4 py-2">Time</th>
+                            <th class="px-4 py-2">Latency (ms)</th>
+                            <th class="px-4 py-2">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart;
+
+        function initChart() {
+            const ctx = document.getElementById('latencyChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Latency (ms)',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateData() {
+            fetch('/api/ping-results')
+                .then(response => response.json())
+                .then(data => {
+                    // Update latest stats
+                    if (data.length > 0) {
+                        const latest = data[0];
+                        document.getElementById('latest-latency').textContent = `${latest.latency.toFixed(2)} ms`;
+                        document.getElementById('last-check').textContent = new Date(latest.timestamp).toLocaleTimeString();
+                        
+                        const successCount = data.filter(r => r.success).length;
+                        const successRate = ((successCount / data.length) * 100).toFixed(1);
+                        document.getElementById('success-rate').textContent = `${successRate}%`;
+                    }
+
+                    // Update chart
+                    chart.data.labels = data.map(r => new Date(r.timestamp).toLocaleTimeString()).reverse();
+                    chart.data.datasets[0].data = data.map(r => r.latency).reverse();
+                    chart.update();
+
+                    // Update history table
+                    const tableBody = document.getElementById('history-table');
+                    tableBody.innerHTML = data.map(r => `
+                        <tr class="border-b">
+                            <td class="px-4 py-2">${new Date(r.timestamp).toLocaleString()}</td>
+                            <td class="px-4 py-2">${r.latency.toFixed(2)}</td>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-1 rounded-full ${r.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${r.success ? 'Success' : 'Failed'}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+        }
+
+        // Initialize
+        initChart();
+        updateData();
+
+        // Update every 15 seconds
+        setInterval(updateData, 15000);
+    </script>
+</body>
+</html> 

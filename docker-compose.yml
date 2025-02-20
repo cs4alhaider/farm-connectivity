@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  farm-connectivity:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./connectivity.db:/app/connectivity.db
+    restart: always 
