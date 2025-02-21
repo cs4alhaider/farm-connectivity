@@ -11,7 +11,7 @@ ENV CGO_ENABLED=1
 WORKDIR /app
 
 # Copy and download dependencies first
-COPY go.mod go.sum ./
+COPY go.mod ./
 RUN go mod download
 
 # Copy source code
