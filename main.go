@@ -4,6 +4,7 @@ import (
 	"farm-connectivity/database"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,7 +24,7 @@ func pingGoogle() (float64, bool) {
 }
 
 func startPingMonitor(app *fiber.App) {
-	ticker := time.NewTicker(15 * time.Second)
+	ticker := time.NewTicker(60 * time.Second)
 	go func() {
 		for range ticker.C {
 			latency, success := pingGoogle()
@@ -47,20 +48,40 @@ func main() {
 		Views: engine,
 	})
 
-	// Serve static files
-	app.Static("/static", "./static")
-
 	// Routes
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Render("index", fiber.Map{})
 	})
 
 	app.Get("/api/ping-results", func(c *fiber.Ctx) error {
-		results, err := database.GetPingResults(100) // Get last 100 results
+		// Get query parameters with defaults
+		page, _ := strconv.Atoi(c.Query("page", "1"))
+		pageSize, _ := strconv.Atoi(c.Query("pageSize", "100"))
+		timeRange := c.Query("timeRange", "24h")
+
+		// Get paginated results
+		results, err := database.GetPingResults(page, pageSize, timeRange)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch ping results"})
 		}
-		return c.JSON(results)
+
+		// Get statistics for the time range
+		stats, err := database.GetStats(timeRange)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch statistics"})
+		}
+
+		// Get graph data
+		graphData, err := database.GetGraphData(timeRange)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch graph data"})
+		}
+
+		return c.JSON(fiber.Map{
+			"pagination": results,
+			"stats":      stats,
+			"graph":      graphData,
+		})
 	})
 
 	// Start ping monitor
