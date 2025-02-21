@@ -21,7 +21,7 @@ COPY . .
 RUN go build -o main .
 
 # App port
-EXPOSE 3000
+EXPOSE 4000
 
 # Run application
 CMD ["./main"]

@@ -93,5 +93,5 @@ func main() {
 	startPingMonitor(app)
 
 	// Start server
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":4000"))
 }
