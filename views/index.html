@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,38 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Dark mode transitions */
+        .dark { background-color: #0f172a; }
+        .dark body { background-color: #0f172a; }
+        .dark .bg-white { background-color: #1e293b; }
+        .dark .bg-gray-50 { background-color: #0f172a; }
+        .dark .bg-gray-100 { background-color: #1e293b; }
+        .dark .border-gray-100, .dark .border-gray-200 { border-color: #334155; }
+        .dark .text-gray-500 { color: #94a3b8; }
+        .dark .text-gray-600 { color: #cbd5e1; }
+        .dark .text-gray-800, .dark .text-gray-900 { color: #f1f5f9; }
+        .dark .hover\:bg-gray-50:hover { background-color: #334155; }
+        .dark .hover\:bg-gray-100:hover { background-color: #334155; }
+        .dark .bg-blue-50 { background-color: rgba(37, 99, 235, 0.1); }
+        .dark .text-blue-600 { color: #60a5fa; }
+        .dark .text-blue-800 { color: #93c5fd; }
+        .dark .divide-gray-200 > * + * { border-color: #334155; }
+        .dark .bg-green-100 { background-color: rgba(34, 197, 94, 0.1); }
+        .dark .bg-red-100 { background-color: rgba(239, 68, 68, 0.1); }
+        .dark .bg-purple-100 { background-color: rgba(147, 51, 234, 0.1); }
+        .dark .bg-blue-100 { background-color: rgba(37, 99, 235, 0.1); }
+        .dark .text-green-800 { color: #4ade80; }
+        .dark .text-red-800 { color: #f87171; }
+        .dark .text-purple-600 { color: #c084fc; }
+        .dark .text-blue-600 { color: #60a5fa; }
+        .dark .hover\:text-gray-800:hover { color: #f1f5f9; }
+        .dark .hover\:bg-blue-600:hover { background-color: #2563eb; }
+        .dark .bg-gray-50 { background-color: #1e293b; }
+        
+        /* Theme transition */
+        * { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
+    </style>
 </head>
 <body class="bg-gray-50">
     <!-- Mobile Header -->
@@ -19,13 +51,22 @@
             <i class="fas fa-bars"></i>
         </button>
         <h1 class="text-xl font-bold text-gray-800">Farm Monitor</h1>
-        <div class="w-8"><!-- Empty div for flex spacing --></div>
+        <button onclick="toggleTheme()" class="p-2 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100">
+            <i class="fas fa-moon dark:hidden"></i>
+            <i class="fas fa-sun hidden dark:inline"></i>
+        </button>
     </div>
 
     <!-- Sidebar -->
     <div id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 lg:w-64 bg-white shadow-lg transition-transform duration-300 ease-in-out z-40 overflow-y-auto">
         <div class="p-6 lg:pt-6 pt-24">
-            <h1 class="text-2xl font-bold text-gray-800 mb-8 hidden lg:block">Farm Monitor</h1>
+            <div class="flex items-center justify-between mb-8">
+                <h1 class="text-2xl font-bold text-gray-800 hidden lg:block">Farm Monitor</h1>
+                <button onclick="toggleTheme()" class="p-2 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100 hidden lg:block">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:inline"></i>
+                </button>
+            </div>
             <nav class="space-y-4">
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-600">Time Range</label>
@@ -394,6 +435,67 @@
                 overlay.classList.add('hidden');
             }
         }
+
+        // Theme management
+        function setTheme(theme) {
+            const html = document.documentElement;
+            const isDark = theme === 'dark';
+            
+            if (isDark) {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+            
+            localStorage.setItem('theme', theme);
+            updateChartTheme(isDark);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            setTheme(isDark ? 'light' : 'dark');
+        }
+
+        // Initialize theme from localStorage or system preference
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else {
+                // Check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    setTheme('dark');
+                } else {
+                    setTheme('light');
+                }
+            }
+
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('theme')) {  // Only react if user hasn't set a preference
+                    setTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        }
+
+        // Update chart colors based on theme
+        function updateChartTheme(isDark) {
+            if (!chart) return;
+            
+            chart.options.scales.y.grid.color = isDark ? 'rgba(203, 213, 225, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+            chart.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#6B7280';
+            chart.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#6B7280';
+            
+            chart.data.datasets[0].borderColor = isDark ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)';
+            chart.data.datasets[0].backgroundColor = isDark ? 'rgba(96, 165, 250, 0.05)' : 'rgba(59, 130, 246, 0.1)';
+            
+            chart.update();
+        }
+
+        // Initialize theme before other scripts
+        initTheme();
     </script>
 </body>
 </html> 
