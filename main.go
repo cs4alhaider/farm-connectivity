@@ -48,6 +48,11 @@ func main() {
 		Views: engine,
 	})
 
+	// Serve static files
+	app.Static("/assets", "./assets")
+	app.Static("/manifest.json", "./views/manifest.json")
+	app.Static("/sw.js", "./views/sw.js")
+
 	// Routes
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Render("index", fiber.Map{})
