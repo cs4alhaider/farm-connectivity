@@ -2,6 +2,9 @@
 
 A simple and high performance web application written in Go language for monitoring internet connectivity in my farm by pinging Google's servers every 60 seconds. This application helps track network performance and identify potential connectivity issues with near towers in the area.
 
+![Dashboard Screenshot](assets/dashboard.png)
+*Farm Connectivity Monitor Dashboard*
+
 ### Why choosing Go over other languages such Java, Python, Node.js, etc.?
 I chosed it spacifically for this project because it will be deployed on a Raspberry Pi 5 with limited resources. Go is a very light language and it will be very easy to deploy and scale.
 
