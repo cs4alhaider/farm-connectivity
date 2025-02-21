@@ -23,7 +23,7 @@ I am pinging Google's servers because they are a reliable and fast server. Also,
 
 ## Requirements
 
-- Go 1.21 or higher (for local development)
+- Go 1.23 or higher (for local development)
 - Docker and Docker Compose (for containerized deployment)
 
 ## Local Development
