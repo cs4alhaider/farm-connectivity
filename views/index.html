@@ -6,54 +6,181 @@
     <title>Farm Connectivity Monitor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-8">Farm Connectivity Monitor</h1>
-        
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4">Current Status</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-blue-100 p-4 rounded-lg">
-                    <h3 class="text-lg font-medium text-blue-800">Latest Latency</h3>
-                    <p id="latest-latency" class="text-2xl font-bold text-blue-900">--</p>
+<body class="bg-gray-50">
+    <!-- Mobile Header -->
+    <div class="lg:hidden flex items-center justify-between fixed top-0 left-0 right-0 bg-white p-4 border-b border-gray-200 z-50">
+        <button onclick="toggleSidebar()" class="p-2 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="text-xl font-bold text-gray-800">Farm Monitor</h1>
+        <div class="w-8"><!-- Empty div for flex spacing --></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 lg:w-64 bg-white shadow-lg transition-transform duration-300 ease-in-out z-40 overflow-y-auto">
+        <div class="p-6 lg:pt-6 pt-24">
+            <h1 class="text-2xl font-bold text-gray-800 mb-8 hidden lg:block">Farm Monitor</h1>
+            <nav class="space-y-4">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-600">Time Range</label>
+                    <select id="timeRange" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <option value="3h">Last 3 Hours</option>
+                        <option value="12h">Last 12 Hours</option>
+                        <option value="24h" selected>Last 24 Hours</option>
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                        <option value="2m">Last 2 Months</option>
+                        <option value="3m">Last 3 Months</option>
+                    </select>
                 </div>
-                <div class="bg-green-100 p-4 rounded-lg">
-                    <h3 class="text-lg font-medium text-green-800">Success Rate</h3>
-                    <p id="success-rate" class="text-2xl font-bold text-green-900">--</p>
+            </nav>
+            
+            <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                <h3 class="text-sm font-medium text-blue-800 mb-2">About Monitor</h3>
+                <ul class="text-sm text-blue-600 space-y-2">
+                    <li class="flex items-center">
+                        <i class="fas fa-clock w-5"></i>
+                        <span>Ping: 60 seconds</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-server w-5"></i>
+                        <span>Target: google.com</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-database w-5"></i>
+                        <span>Storage: SQLite</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-history w-5"></i>
+                        <span>Retention: 3 months</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black opacity-50 z-30 hidden lg:hidden"></div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 p-4 lg:p-8 mt-20 lg:mt-0">
+        <!-- Status Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Latest Latency</p>
+                        <p id="latest-latency" class="text-2xl font-bold text-gray-900">--</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-tachometer-alt text-blue-600"></i>
+                    </div>
                 </div>
-                <div class="bg-purple-100 p-4 rounded-lg">
-                    <h3 class="text-lg font-medium text-purple-800">Last Check</h3>
-                    <p id="last-check" class="text-2xl font-bold text-purple-900">--</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Success Rate</p>
+                        <p id="success-rate" class="text-2xl font-bold text-gray-900">--</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-check text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Last Check</p>
+                        <p id="last-check" class="text-2xl font-bold text-gray-900">--</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <i class="fas fa-clock text-purple-600"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4">Latency Graph</h2>
-            <canvas id="latencyChart"></canvas>
+        <!-- Statistics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                <p class="text-sm font-medium text-gray-600">Total Pings</p>
+                <p id="total-pings" class="text-xl font-bold text-gray-900 mt-1">--</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                <p class="text-sm font-medium text-gray-600">Average Latency</p>
+                <p id="avg-latency" class="text-xl font-bold text-gray-900 mt-1">--</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                <p class="text-sm font-medium text-gray-600">Min Latency</p>
+                <p id="min-latency" class="text-xl font-bold text-gray-900 mt-1">--</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                <p class="text-sm font-medium text-gray-600">Max Latency</p>
+                <p id="max-latency" class="text-xl font-bold text-gray-900 mt-1">--</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                <p class="text-sm font-medium text-gray-600">Overall Success</p>
+                <p id="overall-success-rate" class="text-xl font-bold text-gray-900 mt-1">--</p>
+            </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Recent History</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full table-auto">
-                    <thead>
-                        <tr class="bg-gray-100">
-                            <th class="px-4 py-2">Time</th>
-                            <th class="px-4 py-2">Latency (ms)</th>
-                            <th class="px-4 py-2">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="history-table">
-                    </tbody>
-                </table>
+        <!-- Chart Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+            <div class="p-4 lg:p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Latency Monitor</h2>
+                <div class="pb-8">
+                    <canvas id="latencyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent History Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="p-4 lg:p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-2 sm:space-y-0">
+                    <h2 class="text-lg font-semibold text-gray-800">Recent History</h2>
+                    <div class="flex items-center space-x-2">
+                        <select id="pageSize" class="rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            <option value="25" selected>25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto -mx-4 lg:mx-0">
+                    <div class="inline-block min-w-full align-middle">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latency (ms)</th>
+                                    <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table" class="divide-y divide-gray-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 space-y-2 sm:space-y-0">
+                    <div class="text-sm text-gray-600">
+                        Showing <span id="showing-range">--</span> of <span id="total-records">--</span> records
+                    </div>
+                    <div class="flex flex-wrap gap-2" id="pagination-controls">
+                        <!-- Pagination buttons will be inserted here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         let chart;
+        let currentPage = 1;
+        let totalPages = 1;
 
         function initChart() {
             const ctx = document.getElementById('latencyChart').getContext('2d');
@@ -64,49 +191,149 @@
                     datasets: [{
                         label: 'Latency (ms)',
                         data: [],
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                padding: 10
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            bottom: 10
                         }
                     }
                 }
             });
+            
+            // Set a fixed height for the chart
+            ctx.canvas.parentNode.style.height = '400px';
+        }
+
+        function updatePaginationControls() {
+            const controls = document.getElementById('pagination-controls');
+            controls.innerHTML = '';
+
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.className = `px-3 py-1 rounded-md ${currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600'}`;
+            prevButton.textContent = 'Previous';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateData();
+                }
+            };
+            controls.appendChild(prevButton);
+
+            // Page numbers
+            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = `px-3 py-1 rounded-md ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`;
+                pageButton.textContent = i;
+                pageButton.onclick = () => {
+                    currentPage = i;
+                    updateData();
+                };
+                controls.appendChild(pageButton);
+            }
+
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.className = `px-3 py-1 rounded-md ${currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600'}`;
+            nextButton.textContent = 'Next';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateData();
+                }
+            };
+            controls.appendChild(nextButton);
         }
 
         function updateData() {
-            fetch('/api/ping-results')
+            const timeRange = document.getElementById('timeRange').value;
+            const pageSize = document.getElementById('pageSize').value;
+
+            fetch(`/api/ping-results?page=${currentPage}&pageSize=${pageSize}&timeRange=${timeRange}`)
                 .then(response => response.json())
                 .then(data => {
+                    const { pagination, stats, graph } = data;
+                    
+                    // Update pagination info
+                    totalPages = pagination.total_pages;
+                    document.getElementById('showing-range').textContent = 
+                        `${(pagination.current_page - 1) * pageSize + 1}-${Math.min(pagination.current_page * pageSize, pagination.total_count)}`;
+                    document.getElementById('total-records').textContent = pagination.total_count;
+                    updatePaginationControls();
+
                     // Update latest stats
-                    if (data.length > 0) {
-                        const latest = data[0];
+                    if (pagination.results.length > 0) {
+                        const latest = pagination.results[0];
                         document.getElementById('latest-latency').textContent = `${latest.latency.toFixed(2)} ms`;
                         document.getElementById('last-check').textContent = new Date(latest.timestamp).toLocaleTimeString();
-                        
-                        const successCount = data.filter(r => r.success).length;
-                        const successRate = ((successCount / data.length) * 100).toFixed(1);
-                        document.getElementById('success-rate').textContent = `${successRate}%`;
+                        document.getElementById('success-rate').textContent = `${stats.success_rate.toFixed(1)}%`;
                     }
 
-                    // Update chart
-                    chart.data.labels = data.map(r => new Date(r.timestamp).toLocaleTimeString()).reverse();
-                    chart.data.datasets[0].data = data.map(r => r.latency).reverse();
+                    // Update statistics
+                    document.getElementById('total-pings').textContent = stats.total;
+                    document.getElementById('avg-latency').textContent = `${stats.avg_latency.toFixed(2)} ms`;
+                    document.getElementById('min-latency').textContent = `${stats.min_latency.toFixed(2)} ms`;
+                    document.getElementById('max-latency').textContent = `${stats.max_latency.toFixed(2)} ms`;
+                    document.getElementById('overall-success-rate').textContent = `${stats.success_rate.toFixed(1)}%`;
+
+                    // Update chart with complete time range data
+                    const formatTime = (timestamp) => {
+                        const date = new Date(timestamp);
+                        switch(timeRange) {
+                            case '3h':
+                            case '12h':
+                            case '24h':
+                                return date.toLocaleTimeString();
+                            default:
+                                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                        }
+                    };
+
+                    chart.data.labels = graph.map(r => formatTime(r.timestamp));
+                    chart.data.datasets[0].data = graph.map(r => r.latency);
                     chart.update();
 
                     // Update history table
                     const tableBody = document.getElementById('history-table');
-                    tableBody.innerHTML = data.map(r => `
-                        <tr class="border-b">
-                            <td class="px-4 py-2">${new Date(r.timestamp).toLocaleString()}</td>
-                            <td class="px-4 py-2">${r.latency.toFixed(2)}</td>
-                            <td class="px-4 py-2">
-                                <span class="px-2 py-1 rounded-full ${r.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                    tableBody.innerHTML = pagination.results.map(r => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${new Date(r.timestamp).toLocaleString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${r.latency.toFixed(2)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-3 py-1 rounded-full text-sm font-medium ${r.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                                     ${r.success ? 'Success' : 'Failed'}
                                 </span>
                             </td>
@@ -119,8 +346,33 @@
         initChart();
         updateData();
 
-        // Update every 15 seconds
-        setInterval(updateData, 15000);
+        // Add event listeners
+        document.getElementById('timeRange').addEventListener('change', () => {
+            currentPage = 1;
+            updateData();
+        });
+
+        document.getElementById('pageSize').addEventListener('change', () => {
+            currentPage = 1;
+            updateData();
+        });
+
+        // Update every 60 seconds
+        setInterval(updateData, 60000);
+
+        // Add sidebar toggle functionality
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
     </script>
 </body>
 </html> 
