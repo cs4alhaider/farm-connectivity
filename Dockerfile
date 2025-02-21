@@ -1,24 +1,27 @@
-FROM golang:1.21-alpine
+# Build stage
+FROM golang:1.23.6-alpine
 
-WORKDIR /app
-
-# Install build dependencies
+# Install build dependencies for SQLite
 RUN apk add --no-cache gcc musl-dev
 
-# Copy go mod and sum files
-COPY go.mod go.sum ./
+# Enable CGO
+ENV CGO_ENABLED=1
 
-# Download dependencies
+# Set working directory
+WORKDIR /app
+
+# Copy and download dependencies first
+COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the source code
+# Copy source code
 COPY . .
 
-# Build the application
+# Build binary with CGO enabled
 RUN go build -o main .
 
-# Expose port 3000
+# App port
 EXPOSE 3000
 
-# Run the application
-CMD ["./main"] 
+# Run application
+CMD ["./main"]
